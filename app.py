@@ -76,6 +76,10 @@ st.markdown("""
         background-color: #003468 !important;
         color: #F7D070 !important;
     }
+    /* Style nút xóa */
+    .del-btn-container {
+        margin-top: 28px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -89,18 +93,15 @@ st.markdown("""
 
 # Dữ liệu ma trận nhóm hàng & Lộ trình thanh toán
 GROUPS_INFO = {
+    # --- NHÓM T+2 ---
     "N1": {
         "name": "Vàng miếng, Nhẫn khoen, Vàng Phúc Lộc Tài, Kim Bảo",
         "allowed_to": ["N2", "N3", "N4", "N5", "N6", "N7"],
         "payment": "T+2",
         "schedule": "100% sau 2 ngày làm việc (T+2)"
     },
-    "N2": {
-        "name": "TS Kim Cương, Đá màu, Ngọc trai, TS Vỏ (Không gồm Style)",
-        "allowed_to": ["N2", "N5"],
-        "payment": "T+120",
-        "schedule": "10% (T/T+1) | 20% (T+30) | 25% (T+60) | 25% (T+90) | 20% (T+120)"
-    },
+    
+    # --- NHÓM T+7 ---
     "N3": {
         "name": "TS Công nghệ Ý, KGĐ, Dây chuyền, ECZ/CZ",
         "allowed_to": ["N2", "N3", "N5"],
@@ -112,18 +113,6 @@ GROUPS_INFO = {
         "allowed_to": ["N2", "N3", "N4", "N5"],
         "payment": "T+7",
         "schedule": "100% sau 7 ngày làm việc (T+7)"
-    },
-    "N5": {
-        "name": "Kim cương rời, Đá màu rời, Ngọc trai rời, Vòng cẩm thạch",
-        "allowed_to": ["N2", "N5"],
-        "payment": "T+120",
-        "schedule": "10% (T/T+1) | 20% (T+30) | 25% (T+60) | 25% (T+90) | 20% (T+120)"
-    },
-    "N6": {
-        "name": "Style by PNJ (TS Kim cương, Đá màu, Ngọc trai)",
-        "allowed_to": ["N6"],
-        "payment": "T+120",
-        "schedule": "10% (T/T+1) | 20% (T+30) | 25% (T+60) | 25% (T+90) | 20% (T+120)"
     },
     "N7": {
         "name": "Style by PNJ (KGĐ, CZ/ECZ, Dây chuyền)",
@@ -148,8 +137,42 @@ GROUPS_INFO = {
         "allowed_to": ["N10"],
         "payment": "T+7",
         "schedule": "100% sau 7 ngày làm việc (T+7)"
+    },
+
+    # --- NHÓM T+120 ---
+    "N2": {
+        "name": "TS Kim Cương, Đá màu, Ngọc trai, TS Vỏ (Không gồm Style)",
+        "allowed_to": ["N2", "N5"],
+        "payment": "T+120",
+        "schedule": "10% (T/T+1) | 20% (T+30) | 25% (T+60) | 25% (T+90) | 20% (T+120)"
+    },
+    "N5": {
+        "name": "Kim cương rời, Đá màu rời, Ngọc trai rời, Vòng cẩm thạch",
+        "allowed_to": ["N2", "N5"],
+        "payment": "T+120",
+        "schedule": "10% (T/T+1) | 20% (T+30) | 25% (T+60) | 25% (T+90) | 20% (T+120)"
+    },
+    "N6": {
+        "name": "Style by PNJ (TS Kim cương, Đá màu, Ngọc trai)",
+        "allowed_to": ["N6"],
+        "payment": "T+120",
+        "schedule": "10% (T/T+1) | 20% (T+30) | 25% (T+60) | 25% (T+90) | 20% (T+120)"
     }
 }
+
+# KHỞI TẠO SESSION STATE CHO DANH SÁCH MÓN
+if 'old_items' not in st.session_state:
+    st.session_state.old_items = [
+        {'id': 1, 'group': None, 'val': 0}
+    ]
+if 'new_items' not in st.session_state:
+    st.session_state.new_items = [
+        {'id': 1, 'group': None, 'val': 0}
+    ]
+if 'next_old_id' not in st.session_state:
+    st.session_state.next_old_id = 2
+if 'next_new_id' not in st.session_state:
+    st.session_state.next_new_id = 2
 
 # ==========================================
 # KHỞI TẠO CÁC TAB CHÍNH
@@ -167,108 +190,156 @@ tab_calculator, tab_user_guide, tab_matrix, tab_faq = st.tabs([
 with tab_calculator:
     st.subheader("📋 Tính Toán Cấn Trừ & Xác Định Phương Án Thanh Toán")
     
-    # Bảng tra nhanh phân loại
-    with st.expander("📌 Tham Khảo Phân Loại Nhóm Hàng & Lộ Trình Thanh Toán (T+2, T+7, T+120)", expanded=False):
-        c_t2, c_t7, c_t120 = st.columns(3)
-        with c_t2:
-            st.markdown("""
-            **⚡ NHÓM T+2 (Sau 2 ngày)**
-            * **N1**: Vàng miếng, Nhẫn khoen, Vàng Phúc Lộc Tài, Kim Bảo
-            """, unsafe_allow_html=True)
-        with c_t7:
-            st.markdown("""
-            **🗓️ NHÓM T+7 (Sau 7 ngày)**
-            * **N3**: TS Công nghệ Ý, KGĐ, Dây chuyền, ECZ/CZ
-            * **N4**: Vàng 21.9K - 24K (91.6% - 99.99%), Quà tặng
-            * **N7**: Style by PNJ (KGĐ, CZ/ECZ, Dây chuyền)
-            * **N8**: Heart2Heart | **N9**: Kind Heart | **N10**: Charm & Lì xì
-            """, unsafe_allow_html=True)
-        with c_t120:
-            st.markdown("""
-            **⏳ NHÓM T+120 (Chi trả 5 đợt)**
-            * **N2**: TS Kim Cương, Đá màu, Ngọc trai, TS Vỏ
-            * **N5**: Kim cương rời, Đá màu rời, Ngọc trai rời, Cẩm thạch
-            * **N6**: Style by PNJ (Đá quý, Kim cương, Ngọc trai)
-            """, unsafe_allow_html=True)
-
-    st.markdown("---")
     col_input1, col_input2 = st.columns(2)
     
+    # ------------------------------------------
+    # CỘT 1: HÀNG CỦ (BẢNG KÊ)
+    # ------------------------------------------
     with col_input1:
         st.markdown("### 🛍️ 1. Hàng Cũ Thu Đổi / Mua Lại (Bảng kê)")
         
-        num_old = st.number_input("Số lượng món cũ:", min_value=1, max_value=5, value=2, step=1, key="num_old")
-        old_items = []
+        old_items_processed = []
         total_old_val = 0
-        
-        for i in range(num_old):
-            c_group, c_val = st.columns([6, 4])
+        to_delete_old = None
+
+        for idx, item in enumerate(st.session_state.old_items):
+            c_group, c_val, c_del = st.columns([5.5, 3.2, 1.3])
             
+            # Format hiển thị nhóm hàng
+            def format_group_old(x):
+                if x is None or x == "":
+                    return "❓ -- Chọn nhóm hàng --"
+                info = GROUPS_INFO[x]
+                return f"[{info['payment']}] N{x[1:]} - {info['name'][:30]}..."
+
+            options_list = [None] + list(GROUPS_INFO.keys())
+            curr_index = options_list.index(item['group']) if item['group'] in options_list else 0
+
             with c_group:
-                g_code = st.selectbox(
-                    f"Nhóm Hàng BK{i+1}:",
-                    list(GROUPS_INFO.keys()),
-                    index=0 if i==0 else 3, # Mặc định BK1: N1, BK2: N4
-                    format_func=lambda x: f"[{GROUPS_INFO[x]['payment']}] N{x[1:]} - {GROUPS_INFO[x]['name']}",
-                    key=f"old_g_{i}"
+                selected_g = st.selectbox(
+                    f"Món BK{idx+1}:",
+                    options=options_list,
+                    index=curr_index,
+                    format_func=format_group_old,
+                    key=f"old_g_select_{item['id']}"
                 )
+                item['group'] = selected_g
+
             with c_val:
                 val = st.number_input(
-                    f"Số tiền BK{i+1} (VNĐ):",
+                    f"Giá trị BK{idx+1} (VNĐ):",
                     min_value=0,
-                    value=120000000 if i==0 else 14000000,
+                    value=item['val'],
                     step=1000000,
-                    key=f"old_val_{i}"
+                    key=f"old_val_input_{item['id']}"
                 )
-            
-            old_items.append({
-                "id": f"BK{i+1}",
-                "group": g_code,
-                "name": GROUPS_INFO[g_code]["name"],
-                "value": val,
-                "payment": GROUPS_INFO[g_code]["payment"],
-                "schedule": GROUPS_INFO[g_code]["schedule"]
+                item['val'] = val
+
+            with c_del:
+                st.markdown("<div class='del-btn-container'></div>", unsafe_allow_html=True)
+                if st.button("🗑️ Xóa", key=f"del_old_{item['id']}", help="Xóa món này"):
+                    to_delete_old = item['id']
+
+            if item['group'] is not None and item['val'] > 0:
+                old_items_processed.append({
+                    "id": f"BK{idx+1}",
+                    "group": item['group'],
+                    "name": GROUPS_INFO[item['group']]["name"],
+                    "value": item['val'],
+                    "payment": GROUPS_INFO[item['group']]["payment"],
+                    "schedule": GROUPS_INFO[item['group']]["schedule"]
+                })
+                total_old_val += item['val']
+
+        # Xử lý xóa món cũ nếu click nút Xóa
+        if to_delete_old is not None:
+            st.session_state.old_items = [x for x in st.session_state.old_items if x['id'] != to_delete_old]
+            st.rerun()
+
+        # Nút Thêm Món Cũ
+        if st.button("➕ Thêm món cũ (BK)", key="add_old_btn"):
+            st.session_state.old_items.append({
+                'id': st.session_state.next_old_id,
+                'group': None,
+                'val': 0
             })
-            total_old_val += val
-            
+            st.session_state.next_old_id += 1
+            st.rerun()
+
         st.metric("TỔNG GIÁ TRỊ HÀNG CỦ (BK):", f"{total_old_val:,.0f} VNĐ")
 
+    # ------------------------------------------
+    # CỘT 2: HÀNG MỚI (HÓA ĐƠN)
+    # ------------------------------------------
     with col_input2:
         st.markdown("### 🛒 2. Hàng Mới Khách Mua (Hóa đơn)")
         
-        num_new = st.number_input("Số lượng món mới:", min_value=0, max_value=5, value=2, step=1, key="num_new")
-        new_items = []
+        new_items_processed = []
         total_new_val = 0
-        
-        for j in range(num_new):
-            c_group, c_val = st.columns([6, 4])
+        to_delete_new = None
+
+        for idx, item in enumerate(st.session_state.new_items):
+            c_group, c_val, c_del = st.columns([5.5, 3.2, 1.3])
             
+            def format_group_new(x):
+                if x is None or x == "":
+                    return "❓ -- Chọn nhóm hàng --"
+                info = GROUPS_INFO[x]
+                return f"[{info['payment']}] N{x[1:]} - {info['name'][:30]}..."
+
+            options_list_new = [None] + list(GROUPS_INFO.keys())
+            curr_index_new = options_list_new.index(item['group']) if item['group'] in options_list_new else 0
+
             with c_group:
-                g_code = st.selectbox(
-                    f"Nhóm Hàng HĐ{j+1}:",
-                    list(GROUPS_INFO.keys()),
-                    index=1 if j==0 else 3, # Mặc định HĐ1: N2, HĐ2: N4
-                    format_func=lambda x: f"[{GROUPS_INFO[x]['payment']}] N{x[1:]} - {GROUPS_INFO[x]['name']}",
-                    key=f"new_g_{j}"
+                selected_g_new = st.selectbox(
+                    f"Món HĐ{idx+1}:",
+                    options=options_list_new,
+                    index=curr_index_new,
+                    format_func=format_group_new,
+                    key=f"new_g_select_{item['id']}"
                 )
+                item['group'] = selected_g_new
+
             with c_val:
                 val = st.number_input(
-                    f"Số tiền HĐ{j+1} (VNĐ):",
+                    f"Giá trị HĐ{idx+1} (VNĐ):",
                     min_value=0,
-                    value=130000000 if j==0 else 1000000,
+                    value=item['val'],
                     step=1000000,
-                    key=f"new_val_{j}"
+                    key=f"new_val_input_{item['id']}"
                 )
-            
-            new_items.append({
-                "id": f"HĐ{j+1}",
-                "group": g_code,
-                "name": GROUPS_INFO[g_code]["name"],
-                "value": val,
-                "rem_val": val
+                item['val'] = val
+
+            with c_del:
+                st.markdown("<div class='del-btn-container'></div>", unsafe_allow_html=True)
+                if st.button("🗑️ Xóa", key=f"del_new_{item['id']}", help="Xóa món này"):
+                    to_delete_new = item['id']
+
+            if item['group'] is not None and item['val'] > 0:
+                new_items_processed.append({
+                    "id": f"HĐ{idx+1}",
+                    "group": item['group'],
+                    "name": GROUPS_INFO[item['group']]["name"],
+                    "value": item['val'],
+                    "rem_val": item['val']
+                })
+                total_new_val += item['val']
+
+        # Xử lý xóa món mới nếu click nút Xóa
+        if to_delete_new is not None:
+            st.session_state.new_items = [x for x in st.session_state.new_items if x['id'] != to_delete_new]
+            st.rerun()
+
+        # Nút Thêm Món Mới
+        if st.button("➕ Thêm món mới (HĐ)", key="add_new_btn"):
+            st.session_state.new_items.append({
+                'id': st.session_state.next_new_id,
+                'group': None,
+                'val': 0
             })
-            total_new_val += val
-            
+            st.session_state.next_new_id += 1
+            st.rerun()
+
         st.metric("TỔNG GIÁ TRỊ HÀNG MỚI (HĐ):", f"{total_new_val:,.0f} VNĐ")
 
     st.markdown("---")
@@ -283,16 +354,18 @@ with tab_calculator:
     with col_cond3:
         prefer_company = st.checkbox("Ưu tiên cấn trừ tối đa vào hóa đơn mới?", value=True)
 
-    # Thuật toán tính toán cấn trừ
+    # ------------------------------------------
+    # THUẬT TOÁN TÍNH TOÁN CẤN TRỪ
+    # ------------------------------------------
     can_tru_list = []
     du_item_list = []
     total_can_tru = 0
     total_chi_sau = 0
     
-    # Tạo copy món mới để trừ dần
-    new_pool = [{**item} for item in new_items]
+    # Tạo copy danh sách món mới để trừ dần
+    new_pool = [{**item} for item in new_items_processed]
     
-    for old in old_items:
+    for old in old_items_processed:
         old_val_rem = old["value"]
         
         # Tìm các món mới có ma trận cho phép
@@ -330,11 +403,22 @@ with tab_calculator:
             })
             total_chi_sau += old_val_rem
 
-    # Xác định Phương án
+    # ------------------------------------------
+    # XÁC ĐỊNH PHƯƠNG ÁN
+    # ------------------------------------------
     st.markdown("---")
     st.markdown("### 🎯 KẾT QUẢ PHÂN LOẠI PHƯƠNG ÁN THANH TOÁN")
     
-    if total_new_val == 0:
+    # Cảnh báo nếu chưa chọn nhóm hàng
+    has_unselected_old = any(x['group'] is None for x in st.session_state.old_items if x['val'] > 0)
+    has_unselected_new = any(x['group'] is None for x in st.session_state.new_items if x['val'] > 0)
+    
+    if has_unselected_old or has_unselected_new:
+        st.warning("⚠️ Vui lòng chọn Nhóm Hàng cho tất cả các món để hệ thống tính toán cấn trừ và phân loại chính xác!")
+
+    if total_old_val == 0 and total_new_val == 0:
+        st.info("👋 Hãy chọn Nhóm hàng và nhập giá trị món hàng ở trên để bắt đầu tính toán.")
+    elif total_new_val == 0:
         pa_code = "PA3"
         pa_title = "🔴 Phương Án 3: MUA LẠI HOÀN TOÀN"
         pa_bg = "pa3-bg"
@@ -350,64 +434,65 @@ with tab_calculator:
         pa_bg = "pa2-bg"
         pa_desc = f"Cấn trừ {total_can_tru:,.0f} VNĐ vào hóa đơn mới. Công ty sẽ chi trả lại phần tiền thừa {total_chi_sau:,.0f} VNĐ cho khách theo lộ trình thanh toán."
 
-    st.markdown(f"""
-    <div class="card-pa {pa_bg}">
-        <h3 style="margin:0; color:white;">{pa_title}</h3>
-        <p style="margin:5px 0 0 0; font-weight:normal;">{pa_desc}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Chi tiết cấn trừ & chi trả
-    res_col1, res_col2 = st.columns(2)
-    with res_col1:
-        st.success(f"**Tổng tiền cấn trừ ngay:** {total_can_tru:,.0f} VNĐ")
-        if can_tru_list:
-            st.markdown("**Sơ đồ ghép cấn trừ chi tiết:**")
-            for ct in can_tru_list:
-                st.write(f"• **{ct['old_id']}** (N{ct['old_group'][1:]}) ➔ Cấn trừ **{ct['amount']:,.0f} VNĐ** sang **{ct['new_id']}** (N{ct['new_group'][1:]})")
-        else:
-            st.write("Không có món nào thỏa điều kiện ma trận cấn trừ.")
-            
-    with res_col2:
-        st.warning(f"**Công ty chi trả sau (Theo lộ trình):** {total_chi_sau:,.0f} VNĐ")
-        if du_item_list:
-            st.markdown("**Chi tiết dư chi trả sau:**")
-            for du in du_item_list:
-                st.write(f"• **{du['id']}** (N{du['group'][1:]}): Dư **{du['amount']:,.0f} VNĐ** ➔ Lộ trình **{du['payment']}** ({du['schedule']})")
-        else:
-            st.write("Không có số tiền thừa chi trả sau.")
-
-    # Kịch bản tư vấn chuẩn
-    st.markdown("---")
-    st.markdown("### 🗣️ KỊCH BẢN TƯ VẤN MẪU CHO NHÂN VIÊN (ĐỌC CHO KHÁCH HÀNG)")
-    
-    today_str = datetime.now().strftime("%d/%m/%Y")
-    if pa_code == "PA1":
-        script_text = f"“Dạ em chào Anh/Chị, tổng giá trị các món cũ của Anh/Chị là {total_old_val:,.0f}đ đã được cấn trừ 100% thẳng vào hóa đơn mua hàng mới trị giá {total_new_val:,.0f}đ. Anh/Chị chỉ cần thanh toán phần chênh lệch còn lại là {max(0, total_new_val - total_old_val):,.0f}đ ạ.”"
-    elif pa_code == "PA2":
-        max_payment_term = "T+7"
-        if any(d['payment'] == 'T+120' for d in du_item_list):
-            max_payment_term = "T+120"
-        elif any(d['payment'] == 'T+2' for d in du_item_list):
-            max_payment_term = "T+2"
-            
-        script_text = f"“Dạ em chào Anh/Chị, tổng giá trị món cũ của Anh/Chị là {total_old_val:,.0f}đ. Em đã hỗ trợ cấn trừ {total_can_tru:,.0f}đ trực tiếp vào hóa đơn mới. Số tiền dư còn lại là {total_chi_sau:,.0f}đ, PNJ sẽ chuyển khoản chi trả lại cho Anh/Chị theo đúng lộ trình cam kết ({max_payment_term}) tính từ ngày hôm nay {today_str} ạ.”"
-    else:
-        script_text = f"“Dạ em chào Anh/Chị, giao dịch bán lại sản phẩm của Anh/Chị có tổng trị giá là {total_old_val:,.0f}đ. PNJ tiếp nhận giao dịch và sẽ chuyển khoản thanh toán cho Anh/Chị theo đúng lộ trình quy định của công ty từ 15h00-17h00 hàng ngày ạ.”"
+    if total_old_val > 0 or total_new_val > 0:
+        st.markdown(f"""
+        <div class="card-pa {pa_bg}">
+            <h3 style="margin:0; color:white;">{pa_title}</h3>
+            <p style="margin:5px 0 0 0; font-weight:normal;">{pa_desc}</p>
+        </div>
+        """, unsafe_allow_html=True)
         
-    st.info(script_text)
+        # Chi tiết cấn trừ & chi trả
+        res_col1, res_col2 = st.columns(2)
+        with res_col1:
+            st.success(f"**Tổng tiền cấn trừ ngay:** {total_can_tru:,.0f} VNĐ")
+            if can_tru_list:
+                st.markdown("**Sơ đồ ghép cấn trừ chi tiết:**")
+                for ct in can_tru_list:
+                    st.write(f"• **{ct['old_id']}** (N{ct['old_group'][1:]}) ➔ Cấn trừ **{ct['amount']:,.0f} VNĐ** sang **{ct['new_id']}** (N{ct['new_group'][1:]})")
+            else:
+                st.write("Không có món nào thỏa điều kiện ma trận cấn trừ.")
+                
+        with res_col2:
+            st.warning(f"**Công ty chi trả sau (Theo lộ trình):** {total_chi_sau:,.0f} VNĐ")
+            if du_item_list:
+                st.markdown("**Chi tiết dư chi trả sau:**")
+                for du in du_item_list:
+                    st.write(f"• **{du['id']}** (N{du['group'][1:]}): Dư **{du['amount']:,.0f} VNĐ** ➔ Lộ trình **{du['payment']}** ({du['schedule']})")
+            else:
+                st.write("Không có số tiền thừa chi trả sau.")
 
-    # Checklist tuân thủ
-    st.markdown("### 📝 Checklist Tuân Thủ Vận Hành Quầy")
-    c_chk1, c_chk2, c_chk3, c_chk4 = st.columns(4)
-    with c_chk1:
-        st.checkbox("Đã kiểm tra điều kiện HUB", value=is_hub)
-    with c_chk2:
-        st.checkbox("Tuân thủ NĐ 232/320/340", value=True)
-    with c_chk3:
-        st.checkbox("In Phụ lục 01 (Lập 2 bản)", value=(pa_code == "PA2"))
-    with c_chk4:
-        st.checkbox("Không hứa hẹn chi tiền sớm", value=True)
+        # Kịch bản tư vấn chuẩn
+        st.markdown("---")
+        st.markdown("### 🗣️ KỊCH BẢN TƯ VẤN MẪU CHO NHÂN VIÊN (ĐỌC CHO KHÁCH HÀNG)")
+        
+        today_str = datetime.now().strftime("%d/%m/%Y")
+        if pa_code == "PA1":
+            script_text = f"“Dạ em chào Anh/Chị, tổng giá trị các món cũ của Anh/Chị là {total_old_val:,.0f}đ đã được cấn trừ 100% thẳng vào hóa đơn mua hàng mới trị giá {total_new_val:,.0f}đ. Anh/Chị chỉ cần thanh toán phần chênh lệch còn lại là {max(0, total_new_val - total_old_val):,.0f}đ ạ.”"
+        elif pa_code == "PA2":
+            max_payment_term = "T+7"
+            if any(d['payment'] == 'T+120' for d in du_item_list):
+                max_payment_term = "T+120"
+            elif any(d['payment'] == 'T+2' for d in du_item_list):
+                max_payment_term = "T+2"
+                
+            script_text = f"“Dạ em chào Anh/Chị, tổng giá trị món cũ của Anh/Chị là {total_old_val:,.0f}đ. Em đã hỗ trợ cấn trừ {total_can_tru:,.0f}đ trực tiếp vào hóa đơn mới. Số tiền dư còn lại là {total_chi_sau:,.0f}đ, PNJ sẽ chuyển khoản chi trả lại cho Anh/Chị theo đúng lộ trình cam kết ({max_payment_term}) tính từ ngày hôm nay {today_str} ạ.”"
+        else:
+            script_text = f"“Dạ em chào Anh/Chị, giao dịch bán lại sản phẩm của Anh/Chị có tổng trị giá là {total_old_val:,.0f}đ. PNJ tiếp nhận giao dịch và sẽ chuyển khoản thanh toán cho Anh/Chị theo đúng lộ trình quy định của công ty từ 15h00-17h00 hàng ngày ạ.”"
+            
+        st.info(script_text)
+
+        # Checklist tuân thủ
+        st.markdown("### 📝 Checklist Tuân Thủ Vận Hành Quầy")
+        c_chk1, c_chk2, c_chk3, c_chk4 = st.columns(4)
+        with c_chk1:
+            st.checkbox("Đã kiểm tra điều kiện HUB", value=is_hub)
+        with c_chk2:
+            st.checkbox("Tuân thủ NĐ 232/320/340", value=True)
+        with c_chk3:
+            st.checkbox("In Phụ lục 01 (Lập 2 bản)", value=(pa_code == "PA2"))
+        with c_chk4:
+            st.checkbox("Không hứa hẹn chi tiền sớm", value=True)
 
 
 # ==========================================

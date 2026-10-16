@@ -11,13 +11,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-<<<<<<< Updated upstream
 
 # Custom CSS cho phong cách PNJ (Xanh navy #003468 & Vàng kim #C5A059)
-=======
-#111111
-# Custom CSS tạo giao diện chuẩn như Phiếu Kiểm Tra PNJ
->>>>>>> Stashed changes
 st.markdown("""
 <style>
     .main-header {

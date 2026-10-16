@@ -666,6 +666,6 @@ with tab_faq:
 st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #6c757d; font-size: 13px;">
-    © 2026 Phu Nhuan Jewelry Joint Stock Company (PNJ). Bản quyền thuộc về Khối Bán Lẻ & Vận Hành.
+    © 2026 Chi Nhánh PNJ Miền Trung.
 </div>
 """, unsafe_allow_html=True)

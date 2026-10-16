@@ -45,18 +45,6 @@ st.markdown("""
     .pa2-bg { background-color: #d39e00; }
     .pa3-bg { background-color: #dc3545; }
     
-    .timeline-badge {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-weight: bold;
-        font-size: 12px;
-        margin-right: 5px;
-    }
-    .t2-badge { background-color: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9; }
-    .t7-badge { background-color: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
-    .t120-badge { background-color: #f3e5f5; color: #4a148c; border: 1px solid #ce93d8; }
-
     .guide-box {
         background-color: #f8f9fa;
         border-left: 5px solid #003468;
@@ -99,17 +87,20 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Dữ liệu ma trận nhóm hàng & Lộ trình thanh toán (Phân nhóm theo T+2, T+7, T+120)
+# Dữ liệu ma trận nhóm hàng & Lộ trình thanh toán
 GROUPS_INFO = {
-    # --- NHÓM T+2 ---
     "N1": {
         "name": "Vàng miếng, Nhẫn khoen, Vàng Phúc Lộc Tài, Kim Bảo",
         "allowed_to": ["N2", "N3", "N4", "N5", "N6", "N7"],
         "payment": "T+2",
         "schedule": "100% sau 2 ngày làm việc (T+2)"
     },
-    
-    # --- NHÓM T+7 ---
+    "N2": {
+        "name": "TS Kim Cương, Đá màu, Ngọc trai, TS Vỏ (Không gồm Style)",
+        "allowed_to": ["N2", "N5"],
+        "payment": "T+120",
+        "schedule": "10% (T/T+1) | 20% (T+30) | 25% (T+60) | 25% (T+90) | 20% (T+120)"
+    },
     "N3": {
         "name": "TS Công nghệ Ý, KGĐ, Dây chuyền, ECZ/CZ",
         "allowed_to": ["N2", "N3", "N5"],
@@ -121,6 +112,18 @@ GROUPS_INFO = {
         "allowed_to": ["N2", "N3", "N4", "N5"],
         "payment": "T+7",
         "schedule": "100% sau 7 ngày làm việc (T+7)"
+    },
+    "N5": {
+        "name": "Kim cương rời, Đá màu rời, Ngọc trai rời, Vòng cẩm thạch",
+        "allowed_to": ["N2", "N5"],
+        "payment": "T+120",
+        "schedule": "10% (T/T+1) | 20% (T+30) | 25% (T+60) | 25% (T+90) | 20% (T+120)"
+    },
+    "N6": {
+        "name": "Style by PNJ (TS Kim cương, Đá màu, Ngọc trai)",
+        "allowed_to": ["N6"],
+        "payment": "T+120",
+        "schedule": "10% (T/T+1) | 20% (T+30) | 25% (T+60) | 25% (T+90) | 20% (T+120)"
     },
     "N7": {
         "name": "Style by PNJ (KGĐ, CZ/ECZ, Dây chuyền)",
@@ -145,34 +148,7 @@ GROUPS_INFO = {
         "allowed_to": ["N10"],
         "payment": "T+7",
         "schedule": "100% sau 7 ngày làm việc (T+7)"
-    },
-
-    # --- NHÓM T+120 ---
-    "N2": {
-        "name": "TS Kim Cương, Đá màu, Ngọc trai, TS Vỏ (Không gồm Style)",
-        "allowed_to": ["N2", "N5"],
-        "payment": "T+120",
-        "schedule": "10% (T/T+1) | 20% (T+30) | 25% (T+60) | 25% (T+90) | 20% (T+120)"
-    },
-    "N5": {
-        "name": "Kim cương rời, Đá màu rời, Ngọc trai rời, Vòng cẩm thạch",
-        "allowed_to": ["N2", "N5"],
-        "payment": "T+120",
-        "schedule": "10% (T/T+1) | 20% (T+30) | 25% (T+60) | 25% (T+90) | 20% (T+120)"
-    },
-    "N6": {
-        "name": "Style by PNJ (TS Kim cương, Đá màu, Ngọc trai)",
-        "allowed_to": ["N6"],
-        "payment": "T+120",
-        "schedule": "10% (T/T+1) | 20% (T+30) | 25% (T+60) | 25% (T+90) | 20% (T+120)"
     }
-}
-
-# Danh mục phân nhóm theo Lộ trình thanh toán
-TIMELINE_MAP = {
-    "T+2": ["N1"],
-    "T+7": ["N3", "N4", "N7", "N8", "N9", "N10"],
-    "T+120": ["N2", "N5", "N6"]
 }
 
 # ==========================================
@@ -191,8 +167,8 @@ tab_calculator, tab_user_guide, tab_matrix, tab_faq = st.tabs([
 with tab_calculator:
     st.subheader("📋 Tính Toán Cấn Trừ & Xác Định Phương Án Thanh Toán")
     
-    # Thanh hướng dẫn phân nhóm nhanh T+2, T+7, T+120
-    with st.expander("📌 Xem Phân Loại Nhóm Hàng Theo Lộ Trình Thanh Toán (T+2, T+7, T+120)", expanded=False):
+    # Bảng tra nhanh phân loại
+    with st.expander("📌 Tham Khảo Phân Loại Nhóm Hàng & Lộ Trình Thanh Toán (T+2, T+7, T+120)", expanded=False):
         c_t2, c_t7, c_t120 = st.columns(3)
         with c_t2:
             st.markdown("""
@@ -205,9 +181,7 @@ with tab_calculator:
             * **N3**: TS Công nghệ Ý, KGĐ, Dây chuyền, ECZ/CZ
             * **N4**: Vàng 21.9K - 24K (91.6% - 99.99%), Quà tặng
             * **N7**: Style by PNJ (KGĐ, CZ/ECZ, Dây chuyền)
-            * **N8**: Heart2Heart
-            * **N9**: Kind Heart
-            * **N10**: Charm & Lì xì phong thủy
+            * **N8**: Heart2Heart | **N9**: Kind Heart | **N10**: Charm & Lì xì
             """, unsafe_allow_html=True)
         with c_t120:
             st.markdown("""
@@ -228,43 +202,24 @@ with tab_calculator:
         total_old_val = 0
         
         for i in range(num_old):
-            st.markdown(f"**Món Cũ BK{i+1}:**")
-            c_filter, c_group, c_val = st.columns([2.2, 4.8, 3])
+            c_group, c_val = st.columns([6, 4])
             
-            with c_filter:
-                t_filter = st.selectbox(
-                    f"Lọc Lộ Trình BK{i+1}:",
-                    ["Tất cả", "T+2", "T+7", "T+120"],
-                    index=0,
-                    key=f"old_tf_{i}"
-                )
-            
-            # Đã lọc danh sách mã nhóm
-            if t_filter == "T+2":
-                avail_keys = TIMELINE_MAP["T+2"]
-            elif t_filter == "T+7":
-                avail_keys = TIMELINE_MAP["T+7"]
-            elif t_filter == "T+120":
-                avail_keys = TIMELINE_MAP["T+120"]
-            else:
-                avail_keys = list(GROUPS_INFO.keys())
-                
-            default_index = 0
-            if i == 0 and "N1" in avail_keys:
-                default_index = avail_keys.index("N1")
-            elif i == 1 and "N4" in avail_keys:
-                default_index = avail_keys.index("N4")
-
             with c_group:
                 g_code = st.selectbox(
-                    f"N - Nhóm Hàng BK{i+1}:",
-                    avail_keys,
-                    index=default_index,
-                    format_func=lambda x: f"[{GROUPS_INFO[x]['payment']}] N{x[1:]} - {GROUPS_INFO[x]['name'][:35]}...",
+                    f"Nhóm Hàng BK{i+1}:",
+                    list(GROUPS_INFO.keys()),
+                    index=0 if i==0 else 3, # Mặc định BK1: N1, BK2: N4
+                    format_func=lambda x: f"[{GROUPS_INFO[x]['payment']}] N{x[1:]} - {GROUPS_INFO[x]['name']}",
                     key=f"old_g_{i}"
                 )
             with c_val:
-                val = st.number_input(f"Giá trị BK{i+1} (VNĐ):", min_value=0, value=120000000 if i==0 else 14000000, step=1000000, key=f"old_val_{i}")
+                val = st.number_input(
+                    f"Số tiền BK{i+1} (VNĐ):",
+                    min_value=0,
+                    value=120000000 if i==0 else 14000000,
+                    step=1000000,
+                    key=f"old_val_{i}"
+                )
             
             old_items.append({
                 "id": f"BK{i+1}",
@@ -286,42 +241,24 @@ with tab_calculator:
         total_new_val = 0
         
         for j in range(num_new):
-            st.markdown(f"**Món Mới HĐ{j+1}:**")
-            c_filter, c_group, c_val = st.columns([2.2, 4.8, 3])
+            c_group, c_val = st.columns([6, 4])
             
-            with c_filter:
-                t_filter_new = st.selectbox(
-                    f"Lọc Lộ Trình HĐ{j+1}:",
-                    ["Tất cả", "T+2", "T+7", "T+120"],
-                    index=0,
-                    key=f"new_tf_{j}"
-                )
-            
-            if t_filter_new == "T+2":
-                avail_keys_new = TIMELINE_MAP["T+2"]
-            elif t_filter_new == "T+7":
-                avail_keys_new = TIMELINE_MAP["T+7"]
-            elif t_filter_new == "T+120":
-                avail_keys_new = TIMELINE_MAP["T+120"]
-            else:
-                avail_keys_new = list(GROUPS_INFO.keys())
-                
-            default_index_new = 0
-            if j == 0 and "N2" in avail_keys_new:
-                default_index_new = avail_keys_new.index("N2")
-            elif j == 1 and "N4" in avail_keys_new:
-                default_index_new = avail_keys_new.index("N4")
-
             with c_group:
                 g_code = st.selectbox(
-                    f"N - Nhóm Hàng HĐ{j+1}:",
-                    avail_keys_new,
-                    index=default_index_new,
-                    format_func=lambda x: f"[{GROUPS_INFO[x]['payment']}] N{x[1:]} - {GROUPS_INFO[x]['name'][:35]}...",
+                    f"Nhóm Hàng HĐ{j+1}:",
+                    list(GROUPS_INFO.keys()),
+                    index=1 if j==0 else 3, # Mặc định HĐ1: N2, HĐ2: N4
+                    format_func=lambda x: f"[{GROUPS_INFO[x]['payment']}] N{x[1:]} - {GROUPS_INFO[x]['name']}",
                     key=f"new_g_{j}"
                 )
             with c_val:
-                val = st.number_input(f"Giá trị HĐ{j+1} (VNĐ):", min_value=0, value=130000000 if j==0 else 1000000, step=1000000, key=f"new_val_{j}")
+                val = st.number_input(
+                    f"Số tiền HĐ{j+1} (VNĐ):",
+                    min_value=0,
+                    value=130000000 if j==0 else 1000000,
+                    step=1000000,
+                    key=f"new_val_{j}"
+                )
             
             new_items.append({
                 "id": f"HĐ{j+1}",
@@ -569,7 +506,7 @@ with tab_user_guide:
         st.info("""
         ### 🏢 CỬA HÀNG THƯỜNG (Standard Store)
         * **Chỉ tiếp nhận:** Giao dịch **Đổi Sản Phẩm Mới (PA1)**.
-        * **Điều kiện:** Giá trị món mới $\ge$ Giá trị món cũ và thỏa ma trận chuyển đổi.
+        * **Điều kiện:** Giá trị món mới $\\ge$ Giá trị món cũ và thỏa ma trận chuyển đổi.
         * **KHÔNG tiếp nhận:** Bất kỳ giao dịch nào phát sinh nghĩa vụ **chi trả lại tiền** cho khách hàng.
         """)
         
@@ -588,15 +525,15 @@ with tab_user_guide:
 with tab_matrix:
     st.subheader("📊 Bảng Ma Trận Mapping Nhóm Hàng & Lộ Trình Thanh Toán PNJ")
     
-    st.markdown("### 1. Bảng Tổng Hợp Phân Nhóm Hàng Hóa & Lộ Trình Chi Trả")
+    st.markdown("### 1. Bảng Tổng Hợp Nhóm Hàng & Lộ Trình Chi Trả")
     
     matrix_data = []
     for code, info in GROUPS_INFO.items():
         matrix_data.append({
-            "Mã Nhóm": f"N{code[1:]}",
+            "Mã Nhóm": code,
             "Tên Dòng Sản Phẩm": info["name"],
-            "Nhóm Cho Phép Đổi Sang": ", ".join([f"N{x[1:]}" for x in info["allowed_to"]]),
-            "Lộ Trình Thanh Toán": info["payment"],
+            "Nhóm Cho Phép Đổi Sang": ", ".join(info["allowed_to"]),
+            "Thời Gian Thanh Toán": info["payment"],
             "Chi Tiết Lộ Trình Chi Trả": info["schedule"]
         })
         
@@ -604,7 +541,7 @@ with tab_matrix:
     st.dataframe(df_matrix, use_container_width=True, hide_index=True)
     
     st.markdown("---")
-    st.markdown("### 2. Chi Tiết Lộ Trình Thanh Toán T+120 Ngày (Cho Nhóm N2, N5, N6)")
+    st.markdown("### 2. Chi Tiết Lộ Trình Thanh Toán T+120 Ngày (Cho Nhóm 2, 5, 6)")
     
     c_lt1, c_lt2, c_lt3, c_lt4, c_lt5 = st.columns(5)
     with c_lt1:
